@@ -92,23 +92,61 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this._loadImage(selected.nextElementSibling);
       }
 
+      _translateX(elem, x, transition) {
+        elem.style.display = 'block';
+        elem.style.transition = transition ? 'transform 0.2s' : '';
+        elem.style.transform = 'translate3d(' + x + 'px, 0, 0)';
+      }
+
       connectedCallback() {
         super.connectedCallback();
+
+        requestAnimationFrame(this._installListeners.bind(this));
       }
 
       previous() {
         const elem = this.selected.previousElementSibling;
         if (elem) {
-          this.selected = elem;
-        }
-      }
+          // Setup transition start state
+          const oldSelected = this.selected;
+          this._translateX(oldSelected, 0);
+          this._translateX(elem, -this.offsetWidth);
 
-      next() {
-        const elem = this.selected.nextElementSibling;
-        if (elem) {
+          // Start the transition
           this.selected = elem;
+          this._translateX(oldSelected, this.offsetWidth, true /* transition */);
+          this._translateX(elem, 0, true /* transition */);
         }
+    }
+
+    next() {
+      const elem = this.selected.nextElementSibling;
+      if (elem) {
+        // Setup transition start state
+        const oldSelected = this.selected;
+        this._translateX(oldSelected, 0);
+        this._translateX(elem, this.offsetWidth);
+
+        // Start the transition
+        this.selected = elem;
+        this._translateX(oldSelected, -this.offsetWidth, true /* transition */);
+        this._translateX(elem, 0, true /* transition */);
       }
+    }
+
+    _installListeners() {
+      this.addEventListener('transitionend', this._resetChildrenStyles.bind(this));
+    }
+
+    _resetChildrenStyles() {
+      let elem = this.firstElementChild;
+      while (elem) {
+        elem.style.display = '';
+        elem.style.transition = '';
+        elem.style.transform = '';
+        elem = elem.nextElementSibling;
+      }
+    }
 
     }
 
